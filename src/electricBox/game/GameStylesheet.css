@@ -1,0 +1,49 @@
+#electricBoxText{
+    -fx-font-size: 23px;
+}
+
+#hideHelpButton{
+    -fx-pref-height: 100%;
+}
+
+.space{
+    -fx-fill: cornflowerblue;
+    -fx-opacity: 50%;
+    -fx-arc-height: 5px;
+    -fx-arc-width: 5px;
+}
+
+.optionBox{
+    -fx-alignment: center;
+    -fx-font-size: 100%;
+    -fx-background-color: rgba(140, 140, 140, 1);
+    -fx-pref-height: 38px;
+    -fx-pref-width: 32px;
+    -fx-arc-width: 5px;
+    -fx-arc-height: 5px;
+}
+
+.infoBox{
+    -fx-border-color: black;
+    -fx-border-width: 1px;
+}
+
+#inventoryBox{
+    -fx-alignment: center;
+    -fx-pref-width: 170px;
+}
+
+#inventoryText{
+    -fx-font-size: 17px;
+}
+
+#inventory{
+    -fx-alignment: center;
+    -fx-pref-width: 100%;
+    -fx-padding: 11 0 11 0;
+}
+
+#hintBox{
+    -fx-pref-height: 123px;
+    -fx-pref-width: 100%;
+}
