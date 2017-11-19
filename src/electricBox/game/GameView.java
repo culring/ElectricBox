@@ -45,7 +45,6 @@ public class GameView {
 
     private Pane setLayout(){
         Pane layout = new Pane();
-        Pane pane = new Pane();
         GridPane grid = new GridPane();
         grid.setVgap(11);
         grid.setHgap(11);
@@ -58,8 +57,7 @@ public class GameView {
         grid.add(setInventoryLayout(), 1, 1);
         grid.add(setOptionsLayout(), 2, 1);
 
-        pane.getChildren().add(grid);
-        layout.getChildren().add(pane);
+        layout.getChildren().add(grid);
 
         return layout;
     }
@@ -307,9 +305,7 @@ public class GameView {
 
             _layout.getChildren().add(_imageView);
 
-            if(_board == Board.INVENTORY_BOARD) {
-                addDraggingHandlers();
-            }
+            addDraggingHandlers();
         }
 
         public void move(Board board, int x, int y){
@@ -361,15 +357,18 @@ public class GameView {
                     _imageView.cancelDrag();
                 }
                 else{
-                    if(testIsModelAcceptingMove.test(_board.getValue(), _x, _y,
-                            _imageView.newBoard.getValue(), _imageView.newBoardX, _imageView.newBoardY)){
-                        _imageView.confirmDrag();
-                        _x = _imageView.newBoardX;
-                        _y = _imageView.newBoardY;
-                        _board = _imageView.newBoard;
+                    try {
+                        if (testIsModelAcceptingMove.test(_board.getValue(), _x, _y,
+                                _imageView.newBoard.getValue(), _imageView.newBoardX, _imageView.newBoardY)) {
+                            _imageView.confirmDrag();
+                            _x = _imageView.newBoardX;
+                            _y = _imageView.newBoardY;
+                            _board = _imageView.newBoard;
+                        } else {
+                            _imageView.cancelDrag();
+                        }
                     }
-                    else{
-                        _imageView.cancelDrag();
+                    catch(Exception e){
                     }
                 }
             });
@@ -395,7 +394,7 @@ public class GameView {
 
     interface TestIsModelAcceptingMove{
         boolean test(int sourceBoard, int sourceX, int sourceY,
-                            int destBoard, int destX, int destY);
+                            int destBoard, int destX, int destY) throws Exception;
     }
     TestIsModelAcceptingMove testIsModelAcceptingMove;
 

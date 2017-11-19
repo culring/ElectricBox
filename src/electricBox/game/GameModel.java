@@ -1,7 +1,6 @@
 package electricBox.game;
 
 import java.util.LinkedList;
-import java.util.Queue;
 
 /**
  * Created by Culring on 2017-06-06.
@@ -12,179 +11,187 @@ public class GameModel {
         RUNNING,
         FINISHED
     }
-
-    //public enum GameObjectType{
-    //    CURRENT_GENERATOR,
-    //    CURRENT_RECEIVER,
-    //    WIRE,
-    //    PROPELLER,
-    //    WIND_TURBINE,
-    //    LASER,
-    //    LASER_DETECTOR,
-    //    MIRROR
-    //}
+    public enum GameObjectType {
+        CURRENT_GENERATOR,
+        CURRENT_RECEIVER,
+        WIRE,
+        PROPELLER,
+        WIND_TURBINE,
+        LASER,
+        LASER_DETECTOR,
+        MIRROR
+    }
     public enum BoardType {
-        GAME(0),
-        INVENTORY(1);
+        GAME_BOARD(0),
+        INVENTORY_BOARD(1);
 
-        private int _value;
+        private int value;
 
-        BoardType(int value) {
-            _value = value;
+        BoardType(int value){
+            this.value = value;
         }
 
-        public int getValue() {
-            return _value;
+        int getValue(){
+            return value;
         }
     }
 
-    private final Board boards[];
+    private Board boards[];
     private GameState gameState;
-    private LinkedList<FlowingCurrentAction> actionQueue;
+    //private LinkedList<FlowingCurrentAction> actionQueue;
 
-    private Coordinations generatorCoordinations, receiverCoordinations;
+    //private Coordinations generatorCoordinations, receiverCoordinations;
 
     {
         boards = new Board[2];
-        boards[BoardType.GAME.getValue()] = new Board(BoardType.GAME);
-        boards[BoardType.INVENTORY.getValue()] = new Board(BoardType.INVENTORY);
-
+        boards[BoardType.GAME_BOARD.getValue()] = new Board(9, 9);
+        boards[BoardType.INVENTORY_BOARD.getValue()] = new Board(6, 3);
         gameState = GameState.EDITTING;
     }
 
-    // returns 0 if a transaction will end up with a success,
+    // return 0 if a transaction will end up with a success,
     // otherwise 1
-    int createObject(GameObjectType componentType, BoardType board, int x, int y) throws Exception {
-        GameComponent gameComponent;
+    int createObject(GameObjectType gameObjectType, BoardType boardType, int x, int y) throws Exception {
+        GameObject gameComponent;
 
-        switch (componentType) {
+        switch (gameObjectType) {
             case CURRENT_GENERATOR:
-                if (board != BoardType.GAME) {
-                    throw new Exception("Generator tried to put in the inventory board");
-                }
                 gameComponent = new CurrentGenerator();
-                generatorCoordinations = new Coordinations(x, y);
-
                 break;
 
             case CURRENT_RECEIVER:
-                if (board != BoardType.GAME) {
-                    throw new Exception("Receiver tried to put in the inventory board");
-                }
                 gameComponent = new CurrentReceiver();
-                receiverCoordinations = new Coordinations(x, y);
-
-                break;
-
-            case WIRE:
-                gameComponent = new Wire();
-                break;
-
-            case PROPELLER:
-                gameComponent = new Propeller();
                 break;
 
             default:
-                gameComponent = null;
+                throw new Exception("This game object hasn't been implemented yet");
         }
 
-        if (boards[board.getValue()].doesCollide(gameComponent, x, y)) {
-            System.exit(1);
+        // if tried to put newly created object
+        // on an already occupied place
+        if (boards[boardType.getValue()].doesCollide(gameComponent, x, y)) {
+            throw new Exception("Tried to put object on an already occupied place");
         }
-        boards[board.getValue()].set(gameComponent, x, y);
+        boards[boardType.getValue()].set(gameComponent, x, y);
 
         return 0;
     }
 
-    /* return true if object was successfully moved,
-    * otherwise 0 */
-    public boolean move(int sourceBoard, int sourceX, int sourceY,
-                        int destBoard, int destX, int destY) {
+    // return true if object was successfully moved,
+    // otherwise 0
+    public boolean move(BoardType sourceBoardType, int sourceX, int sourceY,
+                        BoardType destBoardType, int destX, int destY) {
+        int sourceBoard = sourceBoardType.getValue();
+        int destBoard = destBoardType.getValue();
 
-        /* if gameState is already running or finished, or
-        * object is not movable, move operation cannot be proceeded */
+        // if gameState is already running or finished, or
+        // object is not movable, move operation cannot be proceeded
         if (gameState == GameState.RUNNING || gameState == GameState.FINISHED ||
-                !boards[sourceBoard]._board[sourceX][sourceY].isMovable()) {
+                !boards[sourceBoard].board[sourceX][sourceY].isMovable()) {
             return false;
         }
 
-        Board destinationBoard = boards[destBoard];
-        GameComponent collisionObject = boards[sourceBoard]._board[sourceX][sourceY];
-        if (!destinationBoard.doesCollide(collisionObject, destX, destY)) {
-            boards[sourceBoard].remove(collisionObject, sourceX, sourceY);
-
-            destinationBoard.set(collisionObject, destX, destY);
+        GameObject collisionObject = boards[sourceBoard].board[sourceX][sourceY];
+        if (!boards[destBoard].doesCollide(collisionObject, destX, destY)) {
+            boards[sourceBoard].remove(sourceX, sourceY);
+            boards[destBoard].set(collisionObject, destX, destY);
 
             return true;
         }
         return false;
     }
 
-    public void startGame() throws Exception {
-        /* TODO: po dodaniu generatora itd. odkomentować */
-        /*if(generatorCoordinations == null || receiverCoordinations == null){
-            throw new Exception("Cannot find current generator or current receiver");
-        }*/
-
+    public void startGame() {
         gameState = GameState.RUNNING;
-
-        /* launching current generator */
-        int generatorX = generatorCoordinations.getBoardX();
-        int generatorY = generatorCoordinations.getBoardY();
-        boards[BoardType.GAME.getValue()]._board[generatorX][generatorY].activate();
     }
 
-    class FlowingCurrentAction {
-        protected Board _board;
-        protected int _boardX, _boardY;
+    protected enum Rotation{
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT
     }
+    private abstract class GameObject {
+        protected Rotation rotation;
+        protected boolean isRotatable;
+        protected boolean isMovable;
+        protected boolean isActivated;
+        protected int width, height;
 
-    class Coordinations {
-        private int _boardX, _boardY;
-
-        Coordinations(int x, int y) {
-            _boardX = x;
-            _boardY = y;
+        {
+            rotation = Rotation.RIGHT;
+            isRotatable = false;
+            isMovable = false;
+            isActivated = false;
+            width = height = 1;
         }
 
-        public int getBoardX() {
-            return _boardX;
+        public abstract void activate();
+        public void rotateClockwise(){
+            rotation = Rotation.values()[(rotation.ordinal()-1)%4];
+        }
+        public void rotateCounterclockwise(){
+            rotation = Rotation.values()[(rotation.ordinal()+1)%4];
         }
 
-        public int getBoardY() {
-            return _boardY;
+        public boolean isRotatable(){
+            return isRotatable;
+        }
+        public boolean isMovable(){
+            return isMovable;
+        }
+        public int getWidth(){
+            return width;
+        }
+        public int getHeight(){
+            return height;
+        }
+
+        public void setMovable(){
+            isMovable = true;
+        }
+        public void setWidth(int width){
+            this.width = width;
+        }
+        public void setHeight(int height){
+            this.height = height;
+        }
+        public void setRotatable(){
+            isRotatable = true;
         }
     }
 
     // old definitions of game objects
-    //private class CurrentGenerator extends GameComponent{
-    //    CurrentGenerator(){
-    //        super();
-    //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
-    //    }
-    //
-    //    public void activate(){
-    //
-    //    }
-    //}
+    private class CurrentGenerator extends GameObject{
+        CurrentGenerator(){
+            height = 1;
+            width = 1;
+            isMovable = true;
+        }
 
-    //private class CurrentReceiver extends GameComponent{
-    //    CurrentReceiver(){
-    //        super(false);
-    //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
-    //    }
-    //}
-    //
+        public void activate(){
+
+        }
+    }
+
+    private class CurrentReceiver extends GameObject{
+        CurrentReceiver(){
+            height = 1;
+            width = 1;
+            isMovable = true;
+        }
+
+        public void activate(){
+
+        }
+    }
+
     //private class Wire extends GameComponent{
     //    Wire(){
     //        super(false);
     //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
+    //        height = 1;
+    //        width = 1;
     //    }
     //}
     //
@@ -192,8 +199,8 @@ public class GameModel {
     //    Propeller(){
     //        super(true);
     //
-    //        collisionHeight = 2;
-    //        collisionWidth = 1;
+    //        height = 2;
+    //        width = 1;
     //    }
     //}
     //
@@ -201,8 +208,8 @@ public class GameModel {
     //    WindTurbine(){
     //        super(true);
     //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
+    //        height = 1;
+    //        width = 1;
     //    }
     //}
     //
@@ -210,8 +217,8 @@ public class GameModel {
     //    Laser(){
     //        super(true);
     //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
+    //        height = 1;
+    //        width = 1;
     //    }
     //}
     //
@@ -219,8 +226,8 @@ public class GameModel {
     //    LaserDetector(){
     //        super(false);
     //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
+    //        height = 1;
+    //        width = 1;
     //    }
     //}
     //
@@ -228,60 +235,46 @@ public class GameModel {
     //    Mirror(){
     //        super(false);
     //
-    //        collisionHeight = 1;
-    //        collisionWidth = 1;
+    //        height = 1;
+    //        width = 1;
     //    }
     //}
 
     private class Board {
-        private GameComponent _board[][];
-        private int _height, _width;
+        private GameObject board[][];
+        private int height, width;
 
-        Board(BoardType boardType) {
-            switch (boardType) {
-                case GAME:
-                    _height = 9;
-                    _width = 9;
-                    break;
-
-                case INVENTORY:
-                    _height = 6;
-                    _width = 3;
-                    break;
-
-                default:
-                    break;
-            }
-
-            _board = new GameComponent[_width][_height];
+        Board(int height, int width){
+            this.height = height;
+            this.width = width;
+            this.board = new GameObject[this.height][this.width];
         }
 
         public int getHeight() {
-            return _height;
+            return height;
         }
-
         public int getWidth() {
-            return _width;
+            return width;
         }
 
-        public void set(GameComponent gameComponent, int x, int y) {
-            int collisionWidth = gameComponent.getCollisionWidth();
-            int collisionHeight = gameComponent.getCollisionHeight();
+        public void set(GameObject gameComponent, int x, int y) {
+            int collisionWidth = gameComponent.getWidth();
+            int collisionHeight = gameComponent.getHeight();
             for (int i = 0; i < collisionWidth; i++) {
                 for (int j = 0; j < collisionHeight; j++) {
-                    _board[x + i][y + j] = gameComponent;
+                    board[x + i][y + j] = gameComponent;
                 }
             }
         }
 
-        public boolean doesCollide(GameComponent gameComponent, int x, int y) {
-            int collisionWdith = gameComponent.getCollisionWidth();
-            int collisionHeight = gameComponent.getCollisionHeight();
+        public boolean doesCollide(GameObject gameObject, int x, int y) {
+            int collisionWdith = gameObject.getWidth();
+            int collisionHeight = gameObject.getHeight();
 
             for (int i = 0; i < collisionWdith; ++i) {
                 for (int j = 0; j < collisionHeight; j++) {
-                    if (x + i >= _width || y + j >= _height ||
-                            (_board[x + i][y + j] != null && _board[x + i][y + j] != gameComponent)) {
+                    if (x + i >= width || y + j >= height ||
+                            (board[x + i][y + j] != null && board[x + i][y + j] != gameObject)) {
                         return true;
                     }
                 }
@@ -290,16 +283,20 @@ public class GameModel {
             return false;
         }
 
-        public void remove(GameComponent gameComponent, int x, int y) {
-            int collisionWidth = gameComponent.getCollisionWidth();
-            int collisionHeight = gameComponent.getCollisionHeight();
+        public void remove(int x, int y) {
+            GameObject gameObject = board[x][y];
+            int collisionWidth = gameObject.getWidth();
+            int collisionHeight = gameObject.getHeight();
 
             for (int i = 0; i < collisionWidth; ++i) {
                 for (int j = 0; j < collisionHeight; j++) {
-                    _board[x + i][y + j] = null;
+                    board[x + i][y + j] = null;
                 }
             }
         }
 
+        public GameObject getObject(int x, int y){
+            return board[x][y];
+        }
     }
 }

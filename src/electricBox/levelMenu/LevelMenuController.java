@@ -24,7 +24,8 @@ public class LevelMenuController {
     public LevelMenuController(Stage primaryStage){
         _primaryStage = primaryStage;
 
-        int unlockedLevel = getUnlockedLevel();
+        //int unlockedLevel = getUnlockedLevel();
+        int unlockedLevel = 1;
         _view = new LevelMenuView(_primaryStage, _MAX_LEVEL, unlockedLevel);
         _view.setBackButton(event -> {
             new MainMenuController(_primaryStage);
