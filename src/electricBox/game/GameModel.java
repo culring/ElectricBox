@@ -35,17 +35,21 @@ public class GameModel {
             return value;
         }
     }
+    private class Coordinations {
+        int x, y;
+    }
 
+    private Board inventoryBoard;
+    private GameBoard gameBoard;
     private Board boards[];
     private GameState gameState;
-    //private LinkedList<FlowingCurrentAction> actionQueue;
-
-    //private Coordinations generatorCoordinations, receiverCoordinations;
 
     {
+        inventoryBoard = new Board(6, 3);
+        gameBoard = new GameBoard(9, 9);
         boards = new Board[2];
-        boards[BoardType.GAME_BOARD.getValue()] = new Board(9, 9);
-        boards[BoardType.INVENTORY_BOARD.getValue()] = new Board(6, 3);
+        boards[BoardType.GAME_BOARD.getValue()] = gameBoard;
+        boards[BoardType.INVENTORY_BOARD.getValue()] = inventoryBoard;
         gameState = GameState.EDITTING;
     }
 
@@ -63,6 +67,10 @@ public class GameModel {
                 gameComponent = new CurrentReceiver();
                 break;
 
+            case WIRE:
+                gameComponent = new Wire();
+                break;
+
             default:
                 throw new Exception("This game object hasn't been implemented yet");
         }
@@ -70,7 +78,7 @@ public class GameModel {
         // if tried to put newly created object
         // on an already occupied place
         if (boards[boardType.getValue()].doesCollide(gameComponent, x, y)) {
-            throw new Exception("Tried to put object on an already occupied place");
+            throw new Exception("Tried to put object on an already occupied place. Position: ("+x+","+y+").");
         }
         boards[boardType.getValue()].set(gameComponent, x, y);
 
@@ -105,6 +113,15 @@ public class GameModel {
         gameState = GameState.RUNNING;
     }
 
+    public void power(int x, int y){
+        System.out.println("Model power");
+        gameBoard.power(x, y);
+    }
+
+    public void addListener(Listener listener){
+        gameBoard.addListener(listener);
+    }
+
     protected enum Rotation{
         UP,
         RIGHT,
@@ -126,7 +143,7 @@ public class GameModel {
             width = height = 1;
         }
 
-        public abstract void activate();
+        public abstract void power(int x, int y);
         public void rotateClockwise(){
             rotation = Rotation.values()[(rotation.ordinal()-1)%4];
         }
@@ -147,6 +164,7 @@ public class GameModel {
             return height;
         }
 
+        public void activate(){ isActivated = true; }
         public void setMovable(){
             isMovable = true;
         }
@@ -169,8 +187,8 @@ public class GameModel {
             isMovable = true;
         }
 
-        public void activate(){
-
+        public void power(int x, int y){
+            gameBoard.powerStar(x, y);
         }
     }
 
@@ -181,20 +199,23 @@ public class GameModel {
             isMovable = true;
         }
 
-        public void activate(){
-
+        public void power(int x, int y){
+            gameBoard.powerStar(x, y);
         }
     }
 
-    //private class Wire extends GameComponent{
-    //    Wire(){
-    //        super(false);
-    //
-    //        height = 1;
-    //        width = 1;
-    //    }
-    //}
-    //
+    private class Wire extends GameObject{
+        Wire(){
+            height = 1;
+            width = 1;
+            isMovable = true;
+        }
+
+        public void power(int x, int y){
+            gameBoard.powerStar(x, y);
+        }
+    }
+
     //private class Propeller extends GameComponent{
     //    Propeller(){
     //        super(true);
@@ -241,8 +262,8 @@ public class GameModel {
     //}
 
     private class Board {
-        private GameObject board[][];
-        private int height, width;
+        protected GameObject board[][];
+        protected int height, width;
 
         Board(int height, int width){
             this.height = height;
@@ -298,5 +319,45 @@ public class GameModel {
         public GameObject getObject(int x, int y){
             return board[x][y];
         }
+    }
+
+    private class GameBoard extends Board{
+        protected LinkedList<Listener> listeners;
+
+        {
+            listeners = new LinkedList<Listener>();
+        }
+        GameBoard(int height, int width) {
+            super(height, width);
+        }
+
+        public void addListener(Listener listener){
+            listeners.add(listener);
+        }
+
+        public void power(int x, int y){
+            board[x][y].power(x, y);
+        }
+
+        public void powerStar(int x, int y){
+            if(x < 0 || y < 0 || x >= width || y >= height ||
+                    board[x][y] == null ||
+                    (board[x][y] != null && board[x][y].isActivated)){
+                return;
+            }
+            System.out.println("Star");
+            board[x][y].activate();
+            for(Listener listener : listeners){
+                listener.power(x, y);
+            }
+            powerStar(x-1, y);
+            powerStar(x, y+1);
+            powerStar(x+1, y);
+            powerStar(x, y-1);
+        }
+    }
+
+    interface Listener{
+        void power(int x, int y);
     }
 }

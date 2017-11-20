@@ -21,13 +21,15 @@ public class GameView {
     private final int _levelNumber;
     private Stage _primaryStage;
     private Pane _layout;
-
     private PaneButton _menuButton, _levelButton;
-
     private Rectangle[][][] _boardSpaces;
+    // a sprite array in a game board
+    private Sprite sprite[][];
+    Listener listener;
 
     {
         _boardSpaces = new Rectangle[2][][];
+        sprite = new Sprite[Board.GAME_BOARD.getWidth()][Board.GAME_BOARD.getHeight()];
     }
 
     public GameView(Stage primaryStage, int levelNumber){
@@ -267,9 +269,13 @@ public class GameView {
         public double newX, newY;
         public double oldX, oldY;
         public boolean isMoved;
-
         public int newBoardX, newBoardY;
         public Board newBoard;
+
+        BoardImageView(double x, double y){
+            oldX = x;
+            oldY = y;
+        }
 
         public void cancelDrag(){
             setTranslateX(oldX);
@@ -287,37 +293,82 @@ public class GameView {
         }
     }
 
+    interface Listener{
+        void clicked(int x, int y);
+    }
+
+    public void addListener(Listener listener){
+        this.listener = listener;
+    }
+
     private class Sprite {
-        private int _x, _y;
+        private int x, y;
         private Board _board;
-        private BoardImageView _imageView;
+        private BoardImageView imageView;
+        private SpriteType spriteType;
 
         public Sprite(SpriteType spriteType, Board board, int x, int y){
             _board = board;
-            _x = x;
-            _y = y;
+            this.x = x;
+            this.y = y;
+            this.spriteType = spriteType;
+            sprite[x][y] = this;
 
             Image image = new Image(spriteType.getImageNotActivatedPath(), spriteType.getWidth(), spriteType.getHeight(), false, false);
-            _imageView = new BoardImageView();
-            _imageView.setImage(image);
+            Position position = getPosition(board, x, y);
+            imageView = new BoardImageView(position.x, position.y);
+            imageView.setImage(image);
 
             move(board, x, y);
 
-            _layout.getChildren().add(_imageView);
+            _layout.getChildren().add(imageView);
 
             addDraggingHandlers();
+            //addClickHandler();
         }
 
         public void move(Board board, int x, int y){
             System.out.println(x + " | " + y);
 
+            Position position = getPosition(board, x, y);
+            imageView.setTranslateX(position.x);
+            imageView.setTranslateY(position.y);
+
+            sprite[this.x][this.y] = null;
+            sprite[x][y] = this;
+        }
+
+        public Position getPosition(Board board, int x, int y){
             Rectangle space = _boardSpaces[board.getValue()][x][y];
             Bounds bounds = space.localToScene(space.getBoundsInLocal());
-            double newTranslateX = bounds.getMinX();
-            double newTranslateY = bounds.getMinY();
-            _imageView.setTranslateX(newTranslateX);
-            _imageView.setTranslateY(newTranslateY);
+            Position position = new Position();
+            position.x = bounds.getMinX();
+            position.y = bounds.getMinY();
+            return position;
         }
+
+        private class Position{
+            public double x, y;
+        }
+
+        //private void addClickHandler(){
+        //    abstract class ClickHandler implements EventHandler<MouseEvent>{
+        //        private int x, y;
+        //
+        //        ClickHandler(int x, int y){
+        //            this.x = x;
+        //            this.y = y;
+        //        }
+        //    }
+        //
+        //    imageView.setOnMouseClicked(new ClickHandler(this.x, this.y) {
+        //        @Override
+        //        public void handle(MouseEvent event) {
+        //            System.out.println("Click!");
+        //            listener.clicked(x, y);
+        //        }
+        //    });
+        //}
 
         private void addDraggingHandlers(){
             abstract class DraggingHandler<T extends Event> implements EventHandler<T>{
@@ -333,14 +384,15 @@ public class GameView {
                 abstract public void handle(T event);
             }
 
-            _imageView.setOnDragDetected(event -> {
-                _imageView.startFullDrag();
+            imageView.setOnDragDetected(event -> {
+                imageView.startFullDrag();
             });
 
-            _imageView.setOnMousePressed(new DraggingHandler<MouseEvent>(_x, _y) {
+            imageView.setOnMousePressed(new DraggingHandler<MouseEvent>(x, y) {
                 @Override
                 public void handle(MouseEvent event) {
-                    _imageView.setMouseTransparent(true);
+                    System.out.println("Press!");
+                    imageView.setMouseTransparent(true);
 
                     orgSceneX = event.getSceneX();
                     orgSceneY = event.getSceneY();
@@ -350,22 +402,26 @@ public class GameView {
                 }
             });
 
-            _imageView.setOnMouseReleased((MouseEvent event) -> {
-                _imageView.setMouseTransparent(false);
+            imageView.setOnMouseReleased((MouseEvent event) -> {
+                imageView.setMouseTransparent(false);
 
-                if(!_imageView.isMoved){
-                    _imageView.cancelDrag();
+                if(!imageView.isMoved){
+                    imageView.cancelDrag();
+                    System.out.println("Click!");
+                    if(listener != null){
+                        listener.clicked(x, y);
+                    }
                 }
                 else{
                     try {
-                        if (testIsModelAcceptingMove.test(_board.getValue(), _x, _y,
-                                _imageView.newBoard.getValue(), _imageView.newBoardX, _imageView.newBoardY)) {
-                            _imageView.confirmDrag();
-                            _x = _imageView.newBoardX;
-                            _y = _imageView.newBoardY;
-                            _board = _imageView.newBoard;
+                        if (testIsModelAcceptingMove.test(_board.getValue(), x, y,
+                                imageView.newBoard.getValue(), imageView.newBoardX, imageView.newBoardY)) {
+                            imageView.confirmDrag();
+                            x = imageView.newBoardX;
+                            y = imageView.newBoardY;
+                            _board = imageView.newBoard;
                         } else {
-                            _imageView.cancelDrag();
+                            imageView.cancelDrag();
                         }
                     }
                     catch(Exception e){
@@ -373,7 +429,7 @@ public class GameView {
                 }
             });
 
-            _imageView.setOnMouseDragged(new DraggingHandler<MouseEvent>(_x, _y) {
+            imageView.setOnMouseDragged(new DraggingHandler<MouseEvent>(x, y) {
                 @Override
                 public void handle(MouseEvent event) {
                     double offsetX = event.getSceneX() - orgSceneX;
@@ -386,10 +442,21 @@ public class GameView {
                 }
             });
         }
+
+        public void power(){
+            Image newImage = new Image(spriteType.getImageActivatedPath(), spriteType.getWidth(),
+                    spriteType.getHeight(), false, false);
+            this.imageView.setImage(newImage);
+        }
     }
 
     public void createSprite(SpriteType spriteType, Board board, int x, int y){
         new Sprite(spriteType, board, x, y);
+    }
+
+    public void power(int x, int y){
+        System.out.println("(x,y)="+x+","+y+" powered");
+        sprite[x][y].power();
     }
 
     interface TestIsModelAcceptingMove{
@@ -404,7 +471,7 @@ public class GameView {
                 "electricBox/game/graphics/current_generator_activated.png"),
         CURRENT_RECEIVER(48, 48,
                 "electricBox/game/graphics/current_receiver_not_activated.png",
-                "current_receiver_activated.png"),
+                "electricBox/game/graphics/current_receiver_activated.png"),
         WIRE(48, 48,
                 "electricBox/game/graphics/wire_not_activated.png",
                 "electricBox/game/graphics/wire_activated.png"),
