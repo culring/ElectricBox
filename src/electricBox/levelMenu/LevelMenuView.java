@@ -14,11 +14,11 @@ import javafx.stage.Stage;
  * Created by Culring on 2017-05-31.
  */
 public class LevelMenuView {
-    private Stage _primaryStage;
-    private Button _backButton, _levelButtons[];
+    private Stage primaryStage;
+    private Button backButton, levelButtons[];
 
     public LevelMenuView(Stage primaryStage, int maxLevel, int maxUnlockedLevel) {
-        _primaryStage = primaryStage;
+        this.primaryStage = primaryStage;
 
         primaryStage.setTitle("Level menu");
 
@@ -27,35 +27,35 @@ public class LevelMenuView {
         hboxLevels.setSpacing(2);
         hboxLevels.setAlignment(Pos.CENTER);
 
-        _levelButtons = new Button[10];
+        this.levelButtons = new Button[10];
         for(int i = 1; i <= maxUnlockedLevel; ++i) {
-            _levelButtons[i-1] = new LevelButton(i);
-            hboxLevels.getChildren().add(_levelButtons[i-1]);
+            this.levelButtons[i-1] = new LevelButton(i);
+            hboxLevels.getChildren().add(this.levelButtons[i-1]);
         }
         for(int i = maxUnlockedLevel + 1; i <= maxLevel; ++i) {
-            _levelButtons[i-1] = new LevelButton("??");
-            hboxLevels.getChildren().add(_levelButtons[i-1]);
+            this.levelButtons[i-1] = new LevelButton("??");
+            hboxLevels.getChildren().add(this.levelButtons[i-1]);
         }
-        _backButton = new BackButton();
+        this.backButton = new BackButton();
         VBox vbox = new VBox();
         vbox.setAlignment(Pos.CENTER);
         vbox.setSpacing(2);
-        vbox.getChildren().addAll(hboxLevels, _backButton);
+        vbox.getChildren().addAll(hboxLevels, backButton);
         root.getChildren().add(vbox);
 
-        _primaryStage.setScene(new Scene(root, 720, 540));
+        this.primaryStage.setScene(new Scene(root, 720, 540));
     }
 
-    public void setBackButton(EventHandler<ActionEvent> e){
-        _backButton.setOnAction(e);
+    void setBackButton(EventHandler<ActionEvent> e){
+        this.backButton.setOnAction(e);
     }
 
-    public void setLevelButton(int level, EventHandler<ActionEvent> e){
-        _levelButtons[level-1].setOnAction(e);
+    void setLevelButton(int level, EventHandler<ActionEvent> e){
+        this.levelButtons[level-1].setOnAction(e);
     }
 
     private class BackButton extends Button {
-        public BackButton(){
+        BackButton(){
             super("Back");
         }
     }
@@ -66,11 +66,11 @@ public class LevelMenuView {
             setPrefWidth(48);
         }
 
-        public LevelButton(int levelNumber) {
+        LevelButton(int levelNumber) {
             super(Integer.toString(levelNumber));
         }
 
-        public LevelButton(String s){
+        LevelButton(String s){
             super(s);
         }
     }

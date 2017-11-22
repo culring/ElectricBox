@@ -15,33 +15,33 @@ import java.io.FileOutputStream;
  * Created by Culring on 2017-06-09.
  */
 public class LevelMenuController {
-    private Stage _primaryStage;
-    private LevelMenuView _view;
+    private Stage primaryStage;
+    private LevelMenuView view;
 
-    private static int _MAX_LEVEL = 10;
-    private static String _UNLOCKED_LEVEL_FILENAME = new String("unlockedLevel.info");
+    private static int MAX_LEVEL = 10;
+    private static String UNLOCKED_LEVEL_FILENAME = new String("unlockedLevel.info");
 
     public LevelMenuController(Stage primaryStage){
-        _primaryStage = primaryStage;
+        this.primaryStage = primaryStage;
 
         //int unlockedLevel = getUnlockedLevel();
         int unlockedLevel = 1;
-        _view = new LevelMenuView(_primaryStage, _MAX_LEVEL, unlockedLevel);
-        _view.setBackButton(event -> {
-            new MainMenuController(_primaryStage);
+        this.view = new LevelMenuView(this.primaryStage, MAX_LEVEL, unlockedLevel);
+        this.view.setBackButton(event -> {
+            new MainMenuController(this.primaryStage);
         });
         for (int i = 1; i <= unlockedLevel; ++i) {
-            _view.setLevelButton(i, new LevelButtonHandler(i, true));
+            this.view.setLevelButton(i, new LevelButtonHandler(i, true));
         }
-        for (int i = unlockedLevel+1; i <= _MAX_LEVEL; ++i) {
-            _view.setLevelButton(i, new LevelButtonHandler(i, false));
+        for (int i = unlockedLevel+1; i <= MAX_LEVEL; ++i) {
+            this.view.setLevelButton(i, new LevelButtonHandler(i, false));
         }
     }
 
     private int getUnlockedLevel(){
         int maxUnlockedLevel;
         try{
-            FileInputStream fileInputStream = new FileInputStream(_UNLOCKED_LEVEL_FILENAME);
+            FileInputStream fileInputStream = new FileInputStream(UNLOCKED_LEVEL_FILENAME);
             DataInputStream dataInputStream = new DataInputStream(fileInputStream);
             if(dataInputStream.available() >= 4)
                 maxUnlockedLevel = dataInputStream.readInt();
@@ -60,7 +60,7 @@ public class LevelMenuController {
 
     private void setUnlockedLevel(int level){
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(_UNLOCKED_LEVEL_FILENAME);
+            FileOutputStream fileOutputStream = new FileOutputStream(UNLOCKED_LEVEL_FILENAME);
             DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
             dataOutputStream.writeInt(level);
             dataOutputStream.close();
@@ -84,7 +84,7 @@ public class LevelMenuController {
         @Override
         public void handle(ActionEvent e){
             if(_isUnlocked) {
-                new GameController(_primaryStage, _number);
+                new GameController(primaryStage, _number);
             }
         }
     }

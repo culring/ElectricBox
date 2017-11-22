@@ -5,10 +5,11 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+    MainMenuController mainMenuController;
     @Override
     public void start(Stage primaryStage) throws Exception{
         primaryStage.setResizable(false);
-        new MainMenuController(primaryStage);
+        mainMenuController = new MainMenuController(primaryStage);
     }
 
     public static void main(String[] args) {

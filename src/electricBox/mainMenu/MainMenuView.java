@@ -14,11 +14,11 @@ import javafx.stage.Stage;
  * Created by Culring on 2017-05-31.
  */
 public class MainMenuView {
-    private Stage _primaryStage;
-    private Button _playButton, _exitButton;
+    private Stage primaryStage;
+    private Button playButton, exitButton;
 
     public MainMenuView(Stage primaryStage) {
-        _primaryStage = primaryStage;
+        this.primaryStage = primaryStage;
 
         primaryStage.setTitle("Main menu");
 
@@ -28,23 +28,23 @@ public class MainMenuView {
         hbox.setPadding(new Insets(15, 12, 15, 12));
         hbox.setSpacing(10);
         hbox.setStyle("-fx-background-color: #336699");
-        _playButton = new PlayButton();
-        _exitButton = new ExitButton();
-        hbox.getChildren().addAll(_playButton, _exitButton);
+        this.playButton = new PlayButton();
+        this.exitButton = new ExitButton();
+        hbox.getChildren().addAll(this.playButton, this.exitButton);
         hbox.setAlignment(Pos.CENTER);
 
         root.setCenter(hbox);
 
-        _primaryStage.setScene(new Scene(root, 720, 540));
-        _primaryStage.show();
+        this.primaryStage.setScene(new Scene(root, 720, 540));
+        this.primaryStage.show();
     }
 
     public void setPlayButton(EventHandler<ActionEvent> e){
-        _playButton.setOnAction(e);
+        this.playButton.setOnAction(e);
     }
 
     public void setExitButton(EventHandler<ActionEvent> e){
-        _exitButton.setOnAction(e);
+        this.exitButton.setOnAction(e);
     }
 
     private class PlayButton extends Button {

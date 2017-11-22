@@ -7,18 +7,18 @@ import javafx.stage.Stage;
  * Created by Culring on 2017-05-30.
  */
 public class MainMenuController {
-    private MainMenuView _view;
-    private Stage _primaryStage;
+    private MainMenuView view;
+    private Stage primaryStage;
 
     public MainMenuController(Stage primaryStage){
-        _primaryStage = primaryStage;
+        this.primaryStage = primaryStage;
 
-        _view = new MainMenuView(_primaryStage);
-        _view.setPlayButton(event -> launchLevelMenu());
-        _view.setExitButton(event -> _primaryStage.close());
+        this.view = new MainMenuView(this.primaryStage);
+        this.view.setPlayButton(event -> launchLevelMenu());
+        this.view.setExitButton(event -> this.primaryStage.close());
     }
 
     public void launchLevelMenu(){
-        new LevelMenuController(_primaryStage);
+        new LevelMenuController(this.primaryStage);
     }
 }

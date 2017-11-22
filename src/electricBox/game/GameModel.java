@@ -6,12 +6,12 @@ import java.util.LinkedList;
  * Created by Culring on 2017-06-06.
  */
 public class GameModel {
-    public enum GameState {
+    enum GameState {
         EDITTING,
         RUNNING,
         FINISHED
     }
-    public enum GameObjectType {
+    enum GameObjectType {
         CURRENT_GENERATOR,
         CURRENT_RECEIVER,
         WIRE,
@@ -21,7 +21,7 @@ public class GameModel {
         LASER_DETECTOR,
         MIRROR
     }
-    public enum BoardType {
+    enum BoardType {
         GAME_BOARD(0),
         INVENTORY_BOARD(1);
 
